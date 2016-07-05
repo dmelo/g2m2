@@ -1,10 +1,9 @@
-(function ($, undefined) {
-    'use strict';
+define(['jquery', 'showdown'], function($, showdown) {
 
     /**
      * Class constructor.
      */
-    var G2M2 = function() {
+    var g2m2 = function() {
     };
 
     /**
@@ -89,15 +88,13 @@
      * Read and interpret the URL, to load the mardown file, convert to HTML
      * and insert it to the current page.
      */
-    G2M2.prototype.apply = function() {
-        console.log('applying......');
+    g2m2.apply = function() {
         var user = window.location.hostname.replace(/\..*/g, ''),
             repo = window.location.pathname.replace(/^\//g, '').replace(/\/.*/g, ''),
             path = window.location.pathname.replace(/^\/.+?\//, ''),
             ghUrlFile = ghBaseUrl + '/repos/' + user + '/' + repo + '/contents/' + path;
 
         getConfig(user, repo, function(config) {
-            console.log(config);
             if ('string' === typeof config.theme) {
                 applyTheme(config.theme);
             }
@@ -120,5 +117,5 @@
         });
     };
 
-    window.G2M2 = G2M2;
-}(jQuery, undefined));
+    return g2m2;
+});
