@@ -1,4 +1,4 @@
-define(['jquery', 'showdown'], function($, showdown) {
+define(['jquery', 'showdown', 'js-yaml'], function($, showdown, jsYaml) {
 
     /**
      * Class constructor.
@@ -81,7 +81,6 @@ define(['jquery', 'showdown'], function($, showdown) {
 
             $('html').append(newJS);
         }
-
     }
 
     /**
@@ -90,9 +89,11 @@ define(['jquery', 'showdown'], function($, showdown) {
      */
     g2m2.apply = function() {
         var user = window.location.hostname.replace(/\..*/g, ''),
-            repo = window.location.pathname.replace(/^\//g, '').replace(/\/.*/g, ''),
+            repo = window.location.pathname.replace(/^\//g, '').
+                replace(/\/.*/g, ''),
             path = window.location.pathname.replace(/^\/.+?\//, ''),
-            ghUrlFile = ghBaseUrl + '/repos/' + user + '/' + repo + '/contents/' + path;
+            ghUrlFile = ghBaseUrl + '/repos/' + user + '/' + repo +
+                '/contents/' + path;
 
         getConfig(user, repo, function(config) {
             if ('string' === typeof config.theme) {
@@ -110,8 +111,24 @@ define(['jquery', 'showdown'], function($, showdown) {
 
             $.get(ghUrlFile, function (data) {
                 var converter = new showdown.Converter(),
-					text      = '#hello, markdown!',
-                    html      = converter.makeHtml(atob(data.content));
+                    content = atob(data.content),
+                    yaml = content.replace(/[\s\S]*\/\*/g, '').
+                        replace(/\*\/[\s\S]*/, ''),
+                    yamlObj = jsYaml.safeLoad(yaml),
+                    md = content.replace(/\/\*[\s\S]*\*\//g, ''),
+                    html = converter.makeHtml(md);
+
+                console.log(yamlObj);
+
+                if ('string' === typeof yamlObj.Title) {
+                    $('html head title').html(yamlObj.Title);
+                }
+
+                if ('string' === typeof yamlObj.Description) {
+                    $('html head meta[name="description"]').
+                        attr('content', yamlObj.Description);
+                }
+
                 $('body').html(html);
             }, 'json');
         });
