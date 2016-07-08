@@ -42,6 +42,34 @@ define(['jquery', 'showdown', 'js-yaml'], function($, showdown, jsYaml) {
         $('body').html('<p>Error ' + code + '. Msg: ' + msg + '</p>');
     }
 
+    function listContent(fileList, path) {
+        var md = '#Index of ' + path + "\n\n";
+
+        console.log(fileList);
+        console.log(path);
+
+        if ('' !== path && '/' !== path) {
+            md += '- [Up](' + '/' + repo + '/' + path.replace(/\/$/, '').replace(/[^\/]*?$/, '') + ')\n';
+        }
+
+        for (var i in fileList) {
+            var node = fileList[i],
+                text = '',
+                link = '';
+
+            if ('file' === node.type) {
+                text = node.name.replace(/\.md$/, '').replace(/[-]/g, ' ').replace(/_/g, '\\_');
+            } else {
+                text = node.name + '/';
+            }
+            link = '/' + repo + '/' + node.path;
+
+            md += '- [' + text + '](' + link + ')\n';
+        }
+
+        return md;
+    }
+
 
     /**
      * Get the root path of the user/repo and search for .g2m2.json file and
@@ -74,7 +102,7 @@ define(['jquery', 'showdown', 'js-yaml'], function($, showdown, jsYaml) {
                         for (var k in extensionList) {
                             var auxName = filenameList[j] + "." + extensionList[k];
                             if (auxName === node.path.toLowerCase()) {
-                                indexFilePath = auxName;
+                                indexFilePath = node.path;
                                 break;
                             }
                         }
@@ -186,17 +214,11 @@ define(['jquery', 'showdown', 'js-yaml'], function($, showdown, jsYaml) {
                 // get config file.
                 getConfig(user, repo, function(config) {
                     console.log(config);
-                    if ('string' === typeof config.theme) {
-                        applyTheme(config.theme);
-                    }
-
-                    if ('object' === typeof config.css && config.css.length > 0) {
+                    'string' === typeof config.theme && applyTheme(config.theme);
+                    'object' === typeof config.css && config.css.length > 0 &&
                         addCSSs(config.css);
-                    }
-
-                    if ('object' === typeof config.js && config.js.length > 0) {
+                    'object' === typeof config.js && config.js.length > 0 &&
                         addJSs(config.js);
-                    }
 
                     path = window.location.pathname.match(/^\/[^\/]*$/) ||
                         '' === window.location.pathname.replace(/^\/.+?\//, '') ?
@@ -206,26 +228,36 @@ define(['jquery', 'showdown', 'js-yaml'], function($, showdown, jsYaml) {
                     var ghUrlFile = ghBaseUrl + '/repos/' + user + '/' + repo +
                             '/contents/' + (path.match(/\.md$/) ? path : path + '.md');
 
+                    var converter = new showdown.Converter();
+                    // get file
                     $.get(ghUrlFile, function (data) {
-                        var converter = new showdown.Converter(),
-                            content = decodeURIComponent(escape(atob(data.content))),
-                            yaml = content.replace(/[\s\S]*\/\*/g, '').
-                                replace(/\*\/[\s\S]*/, ''),
+                        var content = decodeURIComponent(escape(atob(data.content))),
+                            yaml = content.match(/[\s\S]*\/\*[\s\S]*[\s\S]*/) ? content.replace(/[\s\S]*\/\*/g, '').replace(/\*\/[\s\S]*/, '') : '',
                             yamlObj = jsYaml.safeLoad(yaml), // TODO: this can throw exception, handle it.
                             md = content.replace(/\/\*[\s\S]*\*\//g, ''),
                             html = converter.makeHtml(md);
 
-                        if ('string' === typeof yamlObj.Title) {
+                        if ('object' === typeof yamlObj && 'string' === typeof yamlObj.Title) {
                             $('html head title').html(yamlObj.Title);
                         }
 
-                        if ('string' === typeof yamlObj.Description) {
+                        if ('object' === typeof yamlObj && 'string' === typeof yamlObj.Description) {
                             $('html head meta[name="description"]').
                                 attr('content', yamlObj.Description);
                         }
 
                         $('body').html(html);
-                    }, 'json');
+                    }, 'json').fail(function (e) {
+                        console.log('error 404');
+                        var ghUrlDir = ghBaseUrl + '/repos/' + user + '/' + repo +
+                            '/contents/' + path;
+
+                        $.get(ghUrlDir, function(data) {
+                            var md = listContent(data, path);
+
+                            $('body').html(converter.makeHtml(md));
+                        }, 'json');
+                    });
                 });
             }
         });
