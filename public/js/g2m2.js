@@ -179,9 +179,6 @@ define(['jquery', 'showdown', 'js-yaml'], function($, showdown, jsYaml) {
         user = window.location.hostname.replace(/\..*/g, '');
         repo = window.location.pathname.replace(/^\//g, '').
                 replace(/\/.*/g, '');
-        path = window.location.pathname.replace(/^\/.+?\//, '');
-        var ghUrlFile = ghBaseUrl + '/repos/' + user + '/' + repo +
-                '/contents/' + path;
 
         // get root path.
         getRootPath(function (ret) {
@@ -201,13 +198,20 @@ define(['jquery', 'showdown', 'js-yaml'], function($, showdown, jsYaml) {
                         addJSs(config.js);
                     }
 
+                    path = window.location.pathname.match(/^\/[^\/]*$/) ||
+                        '' === window.location.pathname.replace(/^\/.+?\//, '') ?
+                        indexFilePath :
+                        window.location.pathname.replace(/^\/.+?\//, '');
+
+                    var ghUrlFile = ghBaseUrl + '/repos/' + user + '/' + repo +
+                            '/contents/' + (path.match(/\.md$/) ? path : path + '.md');
 
                     $.get(ghUrlFile, function (data) {
                         var converter = new showdown.Converter(),
-                            content = atob(data.content),
+                            content = decodeURIComponent(escape(atob(data.content))),
                             yaml = content.replace(/[\s\S]*\/\*/g, '').
                                 replace(/\*\/[\s\S]*/, ''),
-                            yamlObj = jsYaml.safeLoad(yaml),
+                            yamlObj = jsYaml.safeLoad(yaml), // TODO: this can throw exception, handle it.
                             md = content.replace(/\/\*[\s\S]*\*\//g, ''),
                             html = converter.makeHtml(md);
 
