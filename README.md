@@ -43,3 +43,9 @@ There is a set of developers, that like me, have the following characteristics:
 - keep a dictionary mapping from URLs to GitHub username and repository so that
 it is possible to map a domain to specific projects;
 
+## License
+
+This software is developed by [Diogo Oliveira de Melo](http://diogomelo.net) and
+licensed under LGPL version 3. You can find a copy of the license on the file
+`LICENSE`. You can access it online on the link
+[LGPL v3](https://www.gnu.org/licenses/lgpl-3.0.txt).
