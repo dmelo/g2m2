@@ -1,4 +1,33 @@
 define(['jquery', 'showdown', 'js-yaml'], function($, showdown, jsYaml) {
+    /**
+     * Endpoint for GitHub API.
+     */
+    const ghBaseUrl = 'https://api.github.com';
+
+    /**
+     * GitHub username.
+     */
+    var user;
+
+    /**
+     * GitHub repo name.
+     */
+    var repo;
+
+    /**
+     * Path to the MarkDown file or directory
+     */
+    var path;
+
+    /**
+     * The path to the index file.
+     */
+    var indexFilePath = null;
+
+    /**
+     * Boolean variable that indicates if the repo have a .g2m2.json file.
+     */
+    var hasConfig = false;
 
     /**
      * Class constructor.
@@ -7,9 +36,62 @@ define(['jquery', 'showdown', 'js-yaml'], function($, showdown, jsYaml) {
     };
 
     /**
-     * Endpoint for GitHub API.
+     * Warn the user about error trying to render the request.
      */
-    const ghBaseUrl = 'https://api.github.com';
+    function error(code, msg) {
+        $('body').html('<p>Error ' + code + '. Msg: ' + msg + '</p>');
+    }
+
+
+    /**
+     * Get the root path of the user/repo and search for .g2m2.json file and
+     * index file. In case it is successfull in quering GitHub about the root
+     * path, it calls the callback with true, as argument. Otherwise, calls
+     * callback with false.
+     */
+    function getRootPath(callback) {
+        // URL that returns a list of objects, each representing a file/dir on
+        // the root path of the repo.
+        var ghUrl = ghBaseUrl + '/repos/' + user + '/' + repo + '/contents/';
+
+        $.get(ghUrl, function (data) {
+            rootFileList = data;
+
+            // iterate on each file returned.
+            for (var i in data) {
+                var node = data[i],
+                    extensionList = ['md', 'mdown', 'markdown'],
+                    filenameList = ['index', 'readme', 'read'];
+                         
+                // check config file.
+                if ('.g2m2.json' === node.path && 'file' === node.type) {
+                    hasConfig = true;
+                }
+
+                // check index file.
+                if (null === indexFilePath) {
+                    for (var j in filenameList) {
+                        for (var k in extensionList) {
+                            var auxName = filenameList[j] + "." + extensionList[k];
+                            if (auxName === node.path.toLowerCase()) {
+                                indexFilePath = auxName;
+                                break;
+                            }
+                        }
+                        if (null !== indexFilePath) {
+                            break;
+                        }
+                    }
+                }
+
+            }
+            callback(true);
+
+        }, 'json').fail(function (e) {
+            error(1, 'Failed requesting URL ' + ghUrl);
+            callback(false);
+        });
+    }
 
     /**
      * Load the repo g2m2 configuration.
@@ -26,13 +108,19 @@ define(['jquery', 'showdown', 'js-yaml'], function($, showdown, jsYaml) {
                 'css': [],
                 'js': []
             };
-        $.get(ghUrl, function (data) {
-            var config = atob(data.content);
-            callback(config);
-        }, 'json').fail(function(e) {
-            console.log('failed getting config file');
+
+        if (hasConfig) {
+            $.get(ghUrl, function (data) {
+                callback(JSON.parse(atob(data.content)));
+            }, 'json').fail(function (e) {
+                console.error(
+                    'hasConfig is set to true but it failed getting the config file'
+                );
+                callback(defaultConfig);
+            });
+        } else {
             callback(defaultConfig);
-        });
+        }
     }
 
     /**
@@ -88,49 +176,54 @@ define(['jquery', 'showdown', 'js-yaml'], function($, showdown, jsYaml) {
      * and insert it to the current page.
      */
     g2m2.apply = function() {
-        var user = window.location.hostname.replace(/\..*/g, ''),
-            repo = window.location.pathname.replace(/^\//g, '').
-                replace(/\/.*/g, ''),
-            path = window.location.pathname.replace(/^\/.+?\//, ''),
-            ghUrlFile = ghBaseUrl + '/repos/' + user + '/' + repo +
+        user = window.location.hostname.replace(/\..*/g, '');
+        repo = window.location.pathname.replace(/^\//g, '').
+                replace(/\/.*/g, '');
+        path = window.location.pathname.replace(/^\/.+?\//, '');
+        var ghUrlFile = ghBaseUrl + '/repos/' + user + '/' + repo +
                 '/contents/' + path;
 
-        getConfig(user, repo, function(config) {
-            if ('string' === typeof config.theme) {
-                applyTheme(config.theme);
+        // get root path.
+        getRootPath(function (ret) {
+            if (ret) {
+                // get config file.
+                getConfig(user, repo, function(config) {
+                    console.log(config);
+                    if ('string' === typeof config.theme) {
+                        applyTheme(config.theme);
+                    }
+
+                    if ('object' === typeof config.css && config.css.length > 0) {
+                        addCSSs(config.css);
+                    }
+
+                    if ('object' === typeof config.js && config.js.length > 0) {
+                        addJSs(config.js);
+                    }
+
+
+                    $.get(ghUrlFile, function (data) {
+                        var converter = new showdown.Converter(),
+                            content = atob(data.content),
+                            yaml = content.replace(/[\s\S]*\/\*/g, '').
+                                replace(/\*\/[\s\S]*/, ''),
+                            yamlObj = jsYaml.safeLoad(yaml),
+                            md = content.replace(/\/\*[\s\S]*\*\//g, ''),
+                            html = converter.makeHtml(md);
+
+                        if ('string' === typeof yamlObj.Title) {
+                            $('html head title').html(yamlObj.Title);
+                        }
+
+                        if ('string' === typeof yamlObj.Description) {
+                            $('html head meta[name="description"]').
+                                attr('content', yamlObj.Description);
+                        }
+
+                        $('body').html(html);
+                    }, 'json');
+                });
             }
-
-            if ('object' === typeof config.css && config.css.length > 0) {
-                addCSSs(config.css);
-            }
-
-            if ('object' === typeof config.js && config.js.length > 0) {
-                addJSs(config.js);
-            }
-
-
-            $.get(ghUrlFile, function (data) {
-                var converter = new showdown.Converter(),
-                    content = atob(data.content),
-                    yaml = content.replace(/[\s\S]*\/\*/g, '').
-                        replace(/\*\/[\s\S]*/, ''),
-                    yamlObj = jsYaml.safeLoad(yaml),
-                    md = content.replace(/\/\*[\s\S]*\*\//g, ''),
-                    html = converter.makeHtml(md);
-
-                console.log(yamlObj);
-
-                if ('string' === typeof yamlObj.Title) {
-                    $('html head title').html(yamlObj.Title);
-                }
-
-                if ('string' === typeof yamlObj.Description) {
-                    $('html head meta[name="description"]').
-                        attr('content', yamlObj.Description);
-                }
-
-                $('body').html(html);
-            }, 'json');
         });
     };
 
