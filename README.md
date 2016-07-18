@@ -1,5 +1,31 @@
 # G2M2 - GitHub & MarkDown as a CMS platform
 
+G2M2 is a different kind of droid. Instead of helping jedi knights saving the
+galaxy, it helps developers maintain their markdown CMSs.
+
+## Get started
+
+If you want to visualize you repo, just access:
+
+``
+http://$USER$.g2m2.com/$REPO$
+``
+
+Where $USER$ is your GitHub username and $REPO$ is the name of the repository
+you want to access.
+
+Here is an example:
+
+``
+http://dmelo.g2m2.com/g2m2-pages
+``
+
+The link above access my blog. On GitHub, the address is:
+
+``
+https://github.com/dmelo/g2m2-pages
+``
+
 ## What G2M2 does?
 
 G2M2 takes the URL, map the corresponding MarkDown file on GitHub and present it
