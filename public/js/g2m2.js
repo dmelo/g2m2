@@ -1,4 +1,6 @@
-define(['jquery', 'showdown', 'js-yaml'], function ($, showdown, jsYaml) {
+define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYaml, RepoMap) {
+    'use strict';
+
     /**
      * Endpoint for GitHub API.
      */
@@ -46,7 +48,8 @@ define(['jquery', 'showdown', 'js-yaml'], function ($, showdown, jsYaml) {
         var md = '#Index of ' + path + "\n\n";
 
         if ('' !== path && '/' !== path) {
-            md += '- [Up](' + '/' + repo + '/' + path.replace(/\/$/, '').replace(/[^\/]*?$/, '') + ')\n';
+            md += '- [Up](' + '/' + repo + '/' + path.replace(/\/$/, '').
+                    replace(/[^\/]*?$/, '') + ')\n';
         }
 
         for (var i in fileList) {
@@ -55,7 +58,8 @@ define(['jquery', 'showdown', 'js-yaml'], function ($, showdown, jsYaml) {
                 link = '';
 
             if ('file' === node.type) {
-                text = node.name.replace(/\.md$/, '').replace(/[-]/g, ' ').replace(/_/g, '\\_');
+                text = node.name.replace(/\.md$/, '').replace(/[-]/g, ' ').
+                    replace(/_/g, '\\_');
             } else {
                 text = node.name + '/';
             }
@@ -80,8 +84,6 @@ define(['jquery', 'showdown', 'js-yaml'], function ($, showdown, jsYaml) {
         var ghUrl = ghBaseUrl + '/repos/' + user + '/' + repo + '/contents/';
 
         $.get(ghUrl, function (data) {
-            rootFileList = data;
-
             // iterate on each file returned.
             for (var i in data) {
                 var node = data[i],
@@ -97,7 +99,8 @@ define(['jquery', 'showdown', 'js-yaml'], function ($, showdown, jsYaml) {
                 if (null === indexFilePath) {
                     for (var j in filenameList) {
                         for (var k in extensionList) {
-                            var auxName = filenameList[j] + "." + extensionList[k];
+                            var auxName = filenameList[j] + "." +
+                                extensionList[k];
                             if (auxName === node.path.toLowerCase()) {
                                 indexFilePath = node.path;
                                 break;
@@ -118,6 +121,13 @@ define(['jquery', 'showdown', 'js-yaml'], function ($, showdown, jsYaml) {
         });
     }
 
+    /**
+     * Call all hooks from registered plugins for a particular trigger.
+     *
+     * @param eventName Event identifier.
+     * @param arg Argument to be passed for the plugins.
+     * @returns returns the arg param that may have been altered by the plugins.
+     */
     function callPlugins(eventName, arg) {
         for (var i in $.g2m2Plugins) {
             var plugin = $.g2m2Plugins[i];
@@ -140,10 +150,11 @@ define(['jquery', 'showdown', 'js-yaml'], function ($, showdown, jsYaml) {
      * @param user GitHub's username.
      * @param repo GitHub's repository name.
      * @param callback Callback function to be invoked with the loaded config.
-     * @return void
+     * @returns void
      */
     function loadConfig(user, repo, callback) {
-        var ghUrl = ghBaseUrl + '/repos/' + user + '/' + repo + '/contents/.g2m2.json',
+        var ghUrl = ghBaseUrl + '/repos/' + user + '/' + repo +
+            '/contents/.g2m2.json',
             defaultConfig = {
                 'theme': 'bootstrap',
                 'css': [],
@@ -171,7 +182,7 @@ define(['jquery', 'showdown', 'js-yaml'], function ($, showdown, jsYaml) {
      * Apply an specific theme.
      *
      * @param theme Theme name.
-     * @return void
+     * @returns void
      */
     function applyTheme(theme) {
         console.log('applying theme: ' + theme);
@@ -204,6 +215,9 @@ define(['jquery', 'showdown', 'js-yaml'], function ($, showdown, jsYaml) {
     /**
      * Add the list of JS URL links to the current page, to be loaded by the
      * browser.
+     *
+     * @param jsList A list of js scripts to be loaded by the page,
+     * asynchronously.
      */
     function addJSs(jsList) {
         for (var i in jsList) {
@@ -221,7 +235,7 @@ define(['jquery', 'showdown', 'js-yaml'], function ($, showdown, jsYaml) {
      *
      * @param jsList list of js scripts.
      * @param callback Callback function to run.
-     * @return void.
+     * @returns void.
      */
     function requireAll(jsList, callback) {
         // if there is more scripts to load
@@ -239,9 +253,11 @@ define(['jquery', 'showdown', 'js-yaml'], function ($, showdown, jsYaml) {
      * and insert it to the current page.
      */
     g2m2.apply = function () {
-        user = window.location.hostname.replace(/\..*/g, '');
-        repo = window.location.pathname.replace(/^\//g, '').
-                replace(/\/.*/g, '');
+        // resolve GitHub user and repo.
+        var repoMap = new RepoMap();
+        repoMap.setLocation(window.location);
+        user = repoMap.getUser();
+        repo = repoMap.getRepo();
 
         // get root path.
         getRootPath(function (ret) {
@@ -258,10 +274,9 @@ define(['jquery', 'showdown', 'js-yaml'], function ($, showdown, jsYaml) {
                     requireAll(config.plugins, function () {
                         config = callPlugins("postLoadConfig", config);
 
-                        path = window.location.pathname.match(/^\/[^\/]*$/) ||
-                            '' === window.location.pathname.replace(/^\/.+?\//, '') ?
-                            indexFilePath :
-                            window.location.pathname.replace(/^\/.+?\//, '');
+                        // if match ^/something$ or ^/something/$ then use
+                        // indexFilePath. Otherwise, remove the first string ^/something/.
+                        path = '/' === repoMap.getPath() ? indexFilePath : repoMap.getPath();
 
                         path = callPlugins("postPathCalc", path);
 
