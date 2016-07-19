@@ -63,7 +63,7 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
             } else {
                 text = node.name + '/';
             }
-            link = node.name;
+            link = path.replace(/\/$/g, '').replace(/.*\//, '') + '/' + node.name;
 
             md += '- [' + text + '](' + link + ')\n';
         }
