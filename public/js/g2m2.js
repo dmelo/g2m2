@@ -63,7 +63,7 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
             } else {
                 text = node.name + '/';
             }
-            link = '/' + repo + '/' + node.path;
+            link = node.name;
 
             md += '- [' + text + '](' + link + ')\n';
         }
@@ -317,6 +317,7 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
                             $('body').html(html);
                         }, 'json').fail(function (e) {
                             console.log('error 404');
+                            console.log(path);
                             var ghUrlDir = ghBaseUrl + '/repos/' + user + '/' + repo +
                                 '/contents/' + path;
 
