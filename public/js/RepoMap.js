@@ -9,7 +9,8 @@ define([], function() {
 
         // HERE IS THE PLACE TO MAP DOMAINS
         this.map = {
-            'diogomelo.net': { 'user': 'dmelo', 'repo': 'g2m2-pages' }
+            'diogomelo.net': { 'user': 'dmelo', 'repo': 'g2m2-pages' },
+            'g2m2.net': {'user': 'dmelo', 'repo': 'g2m2' }
         };
 
         // initialize vars.
