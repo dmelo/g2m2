@@ -1,7 +1,7 @@
 # G2M2 - GitHub & MarkDown as a CMS platform
 
 G2M2 is a different kind of droid. Instead of helping jedi knights saving the
-galaxy, it helps developers maintain their markdown CMSs.
+galaxy, it helps developers maintaining their markdown CMSs.
 
 ## Get started
 
@@ -16,15 +16,11 @@ you want to access.
 
 Here is an example:
 
-``
-http://dmelo.g2m2.com/g2m2-pages
-``
+[http://dmelo.g2m2.com/g2m2-pages](http://dmelo.g2m2.com/g2m2-pages)
 
 The link above access my blog. On GitHub, the address is:
 
-``
-https://github.com/dmelo/g2m2-pages
-``
+[https://github.com/dmelo/g2m2-pages](https://github.com/dmelo/g2m2-pages)
 
 ## What G2M2 does?
 

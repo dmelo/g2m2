@@ -71,6 +71,12 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
         return md;
     }
 
+    function resolveImages(md) {
+        return md.
+            replace(/\!\[(.*?)\]\(([^http|\/].*?)\)/, "![$1](https://github.com/" + user + "/" + repo + "/raw/master/" + path.replace(/[^\/]*$/, '') + "$2)"). // when uri starts with /
+            replace(/\!\[(.*?)\]\((\/.*?)\)/, "![$1](https://github.com/" + user + "/" + repo + "/raw/master/$2)"); // when uri starts without the /
+    }
+
 
     /**
      * Get the root path of the user/repo and search for .g2m2.json file and
@@ -294,8 +300,10 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
                                 ),
                                 yaml = content.match(/[\s\S]*\/\*[\s\S]*[\s\S]*/) ? content.replace(/[\s\S]*\/\*/g, '').replace(/\*\/[\s\S]*/, '') : '',
                                 yamlObj = callPlugins("postYamlObjCalc", jsYaml.safeLoad(yaml)),
-                                md = callPlugins("postMdCalc", content.replace(/\/\*[\s\S]*\*\//g, '')),
+                                md = resolveImages(callPlugins("postMdCalc", content.replace(/\/\*[\s\S]*\*\//g, ''))),
                                 html = callPlugins("postHtmlCalc", converter.makeHtml(md));
+
+                            $.md = md;
 
                             if ('object' === typeof yamlObj && 'string' === typeof yamlObj.Title) {
                                 $('html head title').html(yamlObj.Title);
