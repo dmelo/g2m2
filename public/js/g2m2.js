@@ -313,9 +313,9 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
                                 '/contents/' + path;
 
                             $.get(ghUrlDir, function (data) {
-                                var md = listContent(data, path);
+                                var md = callPlugins("postMdCalc", listContent(data, path));
 
-                                $('body').html(converter.makeHtml(md));
+                                $('body').html(callPlugins("postHtmlCalc", converter.makeHtml(md)));
                             }, 'json');
                         });
                     });
