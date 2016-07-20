@@ -190,16 +190,19 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
      * @param theme Theme name.
      * @returns void
      */
-    function applyTheme(theme) {
-        console.log('applying theme: ' + theme);
+    function applyTheme(config) {
+        console.log('applying theme: ' + config.theme);
 
-        switch (theme) {
+        switch (config.theme) {
             case 'bootstrap':
                 addCSSs([
                     'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css'
                 ]);
+                config.plugins.push('/js/plugins/BootstrapPlugin.js');
                 break;
         }
+
+        return config;
     }
 
     /**
@@ -271,7 +274,7 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
                 // get config file.
                 loadConfig(user, repo, function (config) {
                     console.log(config);
-                    'string' === typeof config.theme && applyTheme(config.theme);
+                    'string' === typeof config.theme && (config = applyTheme(config));
                     'object' === typeof config.css && config.css.length > 0 &&
                         addCSSs(config.css);
                     'object' === typeof config.js && config.js.length > 0 &&
