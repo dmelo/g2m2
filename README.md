@@ -3,12 +3,12 @@
 G2M2 is a different kind of droid. Instead of helping jedi knights saving the
 galaxy, it helps developers maintaining their markdown CMSs.
 
-It reads the URL, to recognize the GitHub user, repo and file it is referencing,
+It provides a direct mapping between GitHub repositories and a Web site. G2M2
+reads the URL, to recognize the GitHub user, repo and file it is referencing,
 access the content on GitHub, parse the markdown and present the content.
 
 Plugins, adicional js scripts and css styles can be loaded if the repository
 have a `.g2m2.json` file describing those items.
-
 
 ## Get started
 
@@ -61,6 +61,14 @@ There is a set of developers, that like me, have the following characteristics:
 - no setup required;
 - the only requirement is to have the project hosted on GitHub (with MarkDown
         files);
+
+## Open problems
+
+- SEO - given that all content is generated on client side, using Javascript,
+search engines might not be able to crawl the content of the generated sites;
+- File listing operations - operations such as generate the latest 20 blog
+posts, or the list of blog posts with a specific tag becames expensive when
+access each file means one HTTP GET request.
 
 
 ## License
