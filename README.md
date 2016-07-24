@@ -40,12 +40,13 @@ GitHub repository that have MarkDown files.
 It works by default and allow customization through `.g2m2.json` file that
 may specify:
 
-- style theme;
+- theme;
+- plugins;
 - CSS files to load;
 - JS files to load.
 
 Customization may also come from MarkDown comments inserted in the body of the
-files.
+files, that are accessible to plugins.
 
 ## For who is this project?
 
@@ -54,6 +55,8 @@ There is a set of developers, that like me, have the following characteristics:
 - very well versed on a text editor (usually Vim or Emacs);
 - use Git and GitHub very heavely;
 - want to maintain a CMS with very little effort.
+
+If you fit this description, then G2M2 is designed for you.
 
 ## Goals
 
@@ -68,7 +71,14 @@ There is a set of developers, that like me, have the following characteristics:
 search engines might not be able to crawl the content of the generated sites;
 - File listing operations - operations such as generate the latest 20 blog
 posts, or the list of blog posts with a specific tag becames expensive when
-access each file means one HTTP GET request.
+access each file means one HTTP GET request;
+- Not able to test changes locally - as G2M2 gets the content from GitHub, if
+you want to test your changes, you have to move it to GitHub.
+
+## Roadmap
+
+- implement favico lookup;
+- swappable markdown parser;
 
 
 ## License
