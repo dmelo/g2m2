@@ -1,4 +1,4 @@
-define([], function() {
+define(['json!/js/DomainMap.json'], function(domainMap) {
     'use strict';
 
     /**
@@ -8,10 +8,7 @@ define([], function() {
         this.location = null;
 
         // HERE IS THE PLACE TO MAP DOMAINS
-        this.map = {
-            'diogomelo.net': { 'user': 'dmelo', 'repo': 'g2m2-pages' },
-            'g2m2.net': {'user': 'dmelo', 'repo': 'g2m2' }
-        };
+        this.map = domainMap;
 
         // initialize vars.
         this.user = '';

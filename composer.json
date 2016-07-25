@@ -1,0 +1,13 @@
+{
+    "name": "dmelo/g2m2",
+    "require": {
+        "knplabs/github-api": "^1.7"
+    },
+    "license": "LGPLv3",
+    "authors": [
+        {
+            "name": "Diogo Oliveira de Melo",
+            "email": "dmelo87@gmail.com"
+        }
+    ]
+}
