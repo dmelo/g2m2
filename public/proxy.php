@@ -35,5 +35,6 @@ try {
 
     echo $fileContent;
 } catch (\Github\Exception\RuntimeException $e) {
-    echo $e->getMessage() . $e->getTraceAsString() . PHP_EOL;
+    header("HTTP/1.0 404 Not Found");
+    echo "Page not found";
 }
