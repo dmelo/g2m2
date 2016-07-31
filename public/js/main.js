@@ -3,7 +3,6 @@ requirejs.config({
 });
 
 define(['g2m2'], function(g2m2) {
-    $(document).ready(function() {
-        g2m2.apply();
-    });
+    console.log(g2m2);
+    g2m2.apply();
 });

@@ -77,6 +77,10 @@ you want to test your changes, you have to move it to GitHub.
 
 ## Roadmap
 
+- make the md resolution server side
+    - cache the server side access to GitHub
+    - implement special GET parameter (e.g.: ?cache=false) to drop the cache
+    entry
 - implement favico lookup;
 - swappable markdown parser;
 

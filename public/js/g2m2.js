@@ -4,7 +4,7 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
     /**
      * Endpoint for GitHub API.
      */
-    const ghBaseUrl = 'https://api.github.com';
+    var ghBaseUrl = 'https://api.github.com';
 
     /**
      * GitHub username.
@@ -172,7 +172,7 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
 
         if (hasConfig) {
             $.get(ghUrl, function (data) {
-                returnLoadConfig(JSON.parse(atob(data.content)), callback);
+                returnLoadConfig(JSON.parse(atob(data.content.replace(/\s/g, ""))), callback);
             }, 'json').fail(function (e) {
                 console.error(
                     'hasConfig is set to true but it failed getting the config file'
@@ -299,7 +299,7 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
                         $.get(ghUrlFile, function (data) {
                             var content = callPlugins(
                                     "postContentCalc",
-                                    decodeURIComponent(escape(atob(data.content)))
+                                    decodeURIComponent(escape(atob(data.content.replace(/\s/g, ""))))
                                 ),
                                 yaml = content.match(/[\s\S]*\/\*[\s\S]*[\s\S]*/) ? content.replace(/[\s\S]*\/\*/g, '').replace(/\*\/[\s\S]*/, '') : '',
                                 yamlObj = callPlugins("postYamlObjCalc", jsYaml.safeLoad(yaml)),
