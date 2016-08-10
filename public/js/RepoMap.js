@@ -54,7 +54,7 @@ define(['json!/js/DomainMap.json'], function(domainMap) {
      */
     RepoMap.prototype.getPath = function() {
         return this.path;
-    }
+    };
 
     return RepoMap;
 });

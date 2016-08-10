@@ -58,12 +58,13 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
                 link = '';
 
             if ('file' === node.type) {
-                text = node.name.replace(/\.md$/, '').replace(/[-]/g, ' ').
+                text = node.name.replace(/\.md$/g, '').replace(/[-]/g, ' ').
                     replace(/_/g, '\\_');
             } else {
                 text = node.name + '/';
             }
-            link = path.replace(/\/$/g, '').replace(/.*\//, '') + '/' + node.name;
+            link = path.replace(/\/$/g, '').replace(/.*\//, '') + '/' +
+                node.name.replace(/\.md$/g, '');
 
             md += '- [' + text + '](' + link + ')\n';
         }
@@ -73,8 +74,8 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
 
     function resolveImages(md) {
         return md.
-            replace(/\!\[(.*?)\]\(([^http|\/].*?)\)/, "![$1](https://github.com/" + user + "/" + repo + "/raw/master/" + path.replace(/[^\/]*$/, '') + "$2)"). // when uri starts with /
-            replace(/\!\[(.*?)\]\((\/.*?)\)/, "![$1](https://github.com/" + user + "/" + repo + "/raw/master/$2)"); // when uri starts without the /
+            replace(/\!\[(.*?)\]\(([^http|\/].*?)\)/g, "![$1](https://github.com/" + user + "/" + repo + "/raw/master/" + path.replace(/[^\/]*$/, '') + "$2)"). // when uri starts with /
+            replace(/\!\[(.*?)\]\((\/.*?)\)/g, "![$1](https://github.com/" + user + "/" + repo + "/raw/master/$2)"); // when uri starts without the /
     }
 
 
@@ -274,11 +275,17 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
                 // get config file.
                 loadConfig(user, repo, function (config) {
                     console.log(config);
-                    'string' === typeof config.theme && (config = applyTheme(config));
-                    'object' === typeof config.css && config.css.length > 0 &&
+                    if ('string' === typeof config.theme) {
+                        config = applyTheme(config);
+                    }
+
+                    if ('object' === typeof config.css && config.css.length > 0) {
                         addCSSs(config.css);
-                    'object' === typeof config.js && config.js.length > 0 &&
+                    }
+
+                    if ('object' === typeof config.js && config.js.length > 0) {
                         addJSs(config.js);
+                    }
 
                     requireAll(config.plugins, function () {
                         config = callPlugins("postLoadConfig", config);
@@ -301,7 +308,7 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
                                     "postContentCalc",
                                     decodeURIComponent(escape(atob(data.content.replace(/\s/g, ""))))
                                 ),
-                                yaml = content.match(/[\s\S]*\/\*[\s\S]*[\s\S]*/) ? content.replace(/[\s\S]*\/\*/g, '').replace(/\*\/[\s\S]*/, '') : '',
+                                yaml = content.match(/[\s\S]*\/\*[\s\S]*[\s\S]*/) ? content.replace(/[\s\S]*\/\*/g, '').replace(/\*\/[\s\S]*/g, '') : '',
                                 yamlObj = callPlugins("postYamlObjCalc", jsYaml.safeLoad(yaml)),
                                 md = resolveImages(callPlugins("postMdCalc", content.replace(/\/\*[\s\S]*\*\//g, ''))),
                                 html = callPlugins("postHtmlCalc", converter.makeHtml(md));
