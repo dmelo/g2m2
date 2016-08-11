@@ -1,4 +1,4 @@
-define(['json!/js/DomainMap.json'], function(domainMap) {
+define(['json!DomainMap.json'], function(domainMap) {
     'use strict';
 
     /**

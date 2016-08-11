@@ -1,0 +1,26 @@
+{
+  "name": "g2m2",
+  "version": "1.0.0",
+  "description": "G2M2 is a different kind of droid. Instead of helping jedi knights saving the galaxy, it helps developers maintaining their markdown CMSs.",
+  "main": "public/index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmelo/g2m2.git"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-jshint": "^1.0.0",
+    "grunt-contrib-requirejs": "^1.0.0",
+    "grunt-contrib-uglify": "^2.0.0",
+    "grunt-contrib-watch": "^1.0.0"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dmelo/g2m2/issues"
+  },
+  "homepage": "https://github.com/dmelo/g2m2#readme"
+}

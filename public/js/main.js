@@ -1,5 +1,5 @@
 requirejs.config({
-    baseUrl: '/js/'
+    baseUrl: '/js'
 });
 
 define(['g2m2'], function(g2m2) {
