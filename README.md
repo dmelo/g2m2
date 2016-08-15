@@ -48,6 +48,10 @@ may specify:
 Customization may also come from MarkDown comments inserted in the body of the
 files, that are accessible to plugins.
 
+A problem that client side Web applications often have, is the interaction with
+search engines. G2M2 solves this problem by using
+[prerender](https://github.com/prerender/prerender).
+
 ## For who is this project?
 
 There is a set of developers, that like me, have the following characteristics:
@@ -67,8 +71,8 @@ If you fit this description, then G2M2 is designed for you.
 
 ## Open problems
 
-- SEO - given that all content is generated on client side, using Javascript,
-search engines might not be able to crawl the content of the generated sites;
+- ~~SEO - given that all content is generated on client side, using Javascript,
+search engines might not be able to crawl the content of the generated sites;~~
 - File listing operations - operations such as generate the latest 20 blog
 posts, or the list of blog posts with a specific tag becames expensive when
 access each file means one HTTP GET request;
