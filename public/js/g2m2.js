@@ -209,7 +209,7 @@ define(
                 addCSSs([
                     'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css'
                 ]);
-                config.plugins.push('/js/plugins/BootstrapPlugin.js');
+                config.plugins.push('plugins/BootstrapPlugin');
                 break;
         }
 
