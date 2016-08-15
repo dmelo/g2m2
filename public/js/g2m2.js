@@ -148,7 +148,8 @@ define(
         for (var i in $.g2m2Plugins) {
             var plugin = $.g2m2Plugins[i];
 
-            if ('function' === typeof plugin[eventName]) {
+            if ('object' === typeof plugin && 'function' === typeof plugin[eventName]) {
+                console.log("callPlugins eventName: " + eventName + ", plugin: " + i);
                 arg = plugin[eventName](arg);
             }
         }
@@ -259,11 +260,13 @@ define(
     function requireAll(jsList, callback) {
         // if there is more scripts to load
         if ('object' === typeof jsList && jsList.length > 0) {
-            $.g2m2Plugins[jsList[0]] = require([jsList[0]], function (data) {
+            require([jsList[0]], function (data) {
                 console.log('load: ' + jsList[0]);
+                console.log(data);
+
+                $.g2m2Plugins[jsList[0]] = data;
                 requireAll(jsList.slice(1), callback);
             });
-            callback();
         } else { // otherwise, run callback.
             callback();
         }

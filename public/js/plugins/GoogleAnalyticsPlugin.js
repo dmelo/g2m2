@@ -1,4 +1,4 @@
-(function ($) {
+define(['jquery'], function ($) {
     'use strict';
 
     var GoogleAnalyticsPlugin = function () {
@@ -28,4 +28,4 @@
     };
 
     return new GoogleAnalyticsPlugin();
-}(jQuery));
+});

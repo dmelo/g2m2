@@ -1,4 +1,4 @@
-(function ($) {
+define(['jquery'], function ($) {
     'use strict';
 
     var DisqusPlugin = function () {
@@ -31,5 +31,5 @@
     };
 
     return new DisqusPlugin();
-}(jQuery));
+});
 

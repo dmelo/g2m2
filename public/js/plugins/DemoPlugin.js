@@ -1,4 +1,4 @@
-(function ($) {
+define(['jquery'], function ($) {
     'use strict';
 
     var DemoPlugin = function () {
@@ -54,5 +54,4 @@
     };
 
     return new DemoPlugin();
-}(jQuery));
-
+});
