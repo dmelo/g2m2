@@ -53,6 +53,6 @@
         return html;
     };
 
-    $.g2m2Plugins.demo = new DemoPlugin();
+    return new DemoPlugin();
 }(jQuery));
 

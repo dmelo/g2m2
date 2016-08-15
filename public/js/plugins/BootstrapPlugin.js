@@ -1,4 +1,4 @@
-(function ($) {
+define(['jquery'], function ($) {
     'use strict';
 
     var BootstrapPlugin = function () {
@@ -8,6 +8,5 @@
         return '<div class="container">' + html + '</div>';
     };
     
-    $.g2m2Plugins.bootstrap = new BootstrapPlugin();
-}(jQuery));
-
+    return new BootstrapPlugin();
+});

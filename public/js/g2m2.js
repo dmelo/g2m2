@@ -1,4 +1,13 @@
-define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYaml, RepoMap) {
+define(
+    [
+        'jquery',
+        'showdown',
+        'js-yaml',
+        'RepoMap',
+        'plugins/BootstrapPlugin',
+        'plugins/GoogleAnalyticsPlugin',
+        'plugins/DisqusPlugin'
+    ], function ($, showdown, jsYaml, RepoMap, pB, pG, pD) {
     'use strict';
 
     /**
@@ -250,9 +259,11 @@ define(['jquery', 'showdown', 'js-yaml', 'RepoMap'], function ($, showdown, jsYa
     function requireAll(jsList, callback) {
         // if there is more scripts to load
         if ('object' === typeof jsList && jsList.length > 0) {
-            require([jsList[0]], function (data) {
+            $.g2m2Plugins[jsList[0]] = require([jsList[0]], function (data) {
+                console.log('load: ' + jsList[0]);
                 requireAll(jsList.slice(1), callback);
             });
+            callback();
         } else { // otherwise, run callback.
             callback();
         }

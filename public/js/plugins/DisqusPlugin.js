@@ -30,6 +30,6 @@
         return html;
     };
 
-    $.g2m2Plugins.disqus = new DisqusPlugin();
+    return new DisqusPlugin();
 }(jQuery));
 

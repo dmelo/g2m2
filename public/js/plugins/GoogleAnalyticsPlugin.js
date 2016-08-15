@@ -27,5 +27,5 @@
 
     };
 
-    $.g2m2Plugins.googleAnalytics = new GoogleAnalyticsPlugin();
+    return new GoogleAnalyticsPlugin();
 }(jQuery));
