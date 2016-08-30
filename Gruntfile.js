@@ -26,8 +26,8 @@ module.exports = function(grunt) {
       compile: {
         options: {
           name: 'main',
-          baseUrl: 'public/js',
-          mainConfigFile: 'public/js/main.js',
+          baseUrl: 'src',
+          mainConfigFile: 'src/main.js',
           include: [
             'require.js'
           ],

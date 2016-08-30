@@ -315,7 +315,14 @@ define(
 
                         ghUrlFile = callPlugins("postGhUrlFileCalc", ghUrlFile);
 
-                        var converter = new showdown.Converter();
+                        var converter = new showdown.Converter(
+                            {
+                                tables: true,
+                                strikethrough: true,
+                                parseImgDimensions: true,
+                                tasklists: true
+                            }
+                        );
                         // get file
                         $.get(ghUrlFile, function (data) {
                             var content = callPlugins(
@@ -339,6 +346,7 @@ define(
                             }
 
                             $('body').html(html);
+                            callPlugins('afterall', null);
                         }, 'json').fail(function (e) {
                             console.log('error 404');
                             console.log(path);
