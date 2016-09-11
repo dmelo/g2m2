@@ -39,6 +39,7 @@ define(
                 text,
                 link;
 
+            // Is it the root dir?
             if ('' !== path && '/' !== path) {
                 md += '- [Up](' + '/' + repo + '/' + path.replace(/\/$/, '').
                         replace(/[^\/]*?$/, '') + ')\n';
@@ -55,7 +56,7 @@ define(
                 } else {
                     text = node.name + '/';
                 }
-                link = path.replace(/\/$/g, '').replace(/.*\//, '') + '/' +
+                link = (path.match(/\/$/) ? '' : path.replace(/.*\//, '') + '/') +
                     node.name.replace(/\.md$/g, '');
 
                 md += '- [' + text + '](' + link + ')\n';
