@@ -1,3 +1,6 @@
+/*global define, atob, escape*/
+/*jslint regexp: true, browser: true*/
+
 define(
     [
         'jquery',
@@ -7,363 +10,386 @@ define(
         'plugins/BootstrapPlugin',
         'plugins/GoogleAnalyticsPlugin',
         'plugins/DisqusPlugin'
-    ], function ($, showdown, jsYaml, RepoMap, pB, pG, pD) {
-    'use strict';
+    ],
+    function ($, showdown, jsYaml, RepoMap) {
+        'use strict';
 
-    /**
-     * Endpoint for GitHub API.
-     */
-    var ghBaseUrl = 'https://api.github.com';
+        /**
+         * Endpoint for GitHub API.
+         */
+        var ghBaseUrl = 'https://api.github.com', // Endpoint for GitHub API.
+            user, // GitHub username.
+            repo, // GitHub repo name.
+            path, // Path to the MarkDown file or directory
+            indexFilePath = null, // The path to the index file.
+            hasConfig = false, // Boolean variable that indicates if the repo have a .g2m2.json file.
+            g2m2 = function () { return undefined; };
 
-    /**
-     * GitHub username.
-     */
-    var user;
-
-    /**
-     * GitHub repo name.
-     */
-    var repo;
-
-    /**
-     * Path to the MarkDown file or directory
-     */
-    var path;
-
-    /**
-     * The path to the index file.
-     */
-    var indexFilePath = null;
-
-    /**
-     * Boolean variable that indicates if the repo have a .g2m2.json file.
-     */
-    var hasConfig = false;
-
-    /**
-     * Class constructor.
-     */
-    var g2m2 = function () {
-    };
-
-    /**
-     * Warn the user about error trying to render the request.
-     */
-    function error(code, msg) {
-        $('body').html('<p>Error ' + code + '. Msg: ' + msg + '</p>');
-    }
-
-    function listContent(fileList, path) {
-        var md = '#Index of ' + path + "\n\n";
-
-        if ('' !== path && '/' !== path) {
-            md += '- [Up](' + '/' + repo + '/' + path.replace(/\/$/, '').
-                    replace(/[^\/]*?$/, '') + ')\n';
+        /**
+         * Warn the user about error trying to render the request.
+         */
+        function error(code, msg) {
+            $('body').html('<p>Error ' + code + '. Msg: ' + msg + '</p>');
         }
 
-        for (var i in fileList) {
-            var node = fileList[i],
-                text = '',
+        function listContent(fileList, path) {
+            var md = '#Index of ' + path + "\n\n",
+                i,
+                node,
+                text,
+                link;
+
+            if ('' !== path && '/' !== path) {
+                md += '- [Up](' + '/' + repo + '/' + path.replace(/\/$/, '').
+                        replace(/[^\/]*?$/, '') + ')\n';
+            }
+
+            for (i in fileList) {
+                node = fileList[i];
+                text = '';
                 link = '';
 
-            if ('file' === node.type) {
-                text = node.name.replace(/\.md$/g, '').replace(/[-]/g, ' ').
-                    replace(/_/g, '\\_');
-            } else {
-                text = node.name + '/';
-            }
-            link = path.replace(/\/$/g, '').replace(/.*\//, '') + '/' +
-                node.name.replace(/\.md$/g, '');
+                if ('file' === node.type) {
+                    text = node.name.replace(/\.md$/g, '').replace(/[\-]/g, ' ').
+                        replace(/_/g, '\\_');
+                } else {
+                    text = node.name + '/';
+                }
+                link = path.replace(/\/$/g, '').replace(/.*\//, '') + '/' +
+                    node.name.replace(/\.md$/g, '');
 
-            md += '- [' + text + '](' + link + ')\n';
+                md += '- [' + text + '](' + link + ')\n';
+            }
+
+            return md;
         }
 
-        return md;
-    }
+        function resolveImages(md) {
+            return md.
+                replace(
+                    /\!\[(.*?)\]\(([^http|\/].*?)\)/g, // when uri starts with /
+                    "![$1](https://github.com/" + user + "/" + repo +
+                        "/raw/master/" + path.replace(/[^\/]*$/, '') + "$2)"
+                ).
+                replace(
+                    /\!\[(.*?)\]\((\/.*?)\)/g, // when uri starts without the /
+                    "![$1](https://github.com/" + user + "/" + repo +
+                        "/raw/master/$2)"
+                );
+        }
 
-    function resolveImages(md) {
-        return md.
-            replace(/\!\[(.*?)\]\(([^http|\/].*?)\)/g, "![$1](https://github.com/" + user + "/" + repo + "/raw/master/" + path.replace(/[^\/]*$/, '') + "$2)"). // when uri starts with /
-            replace(/\!\[(.*?)\]\((\/.*?)\)/g, "![$1](https://github.com/" + user + "/" + repo + "/raw/master/$2)"); // when uri starts without the /
-    }
 
+        /**
+         * Get the root path of the user/repo and search for .g2m2.json file and
+         * index file. In case it is successfull in quering GitHub about the root
+         * path, it calls the callback with true, as argument. Otherwise, calls
+         * callback with false.
+         */
+        function getRootPath(callback) {
+            // URL that returns a list of objects, each representing a file/dir on
+            // the root path of the repo.
+            var ghUrl = ghBaseUrl + '/repos/' + user + '/' + repo + '/contents/';
 
-    /**
-     * Get the root path of the user/repo and search for .g2m2.json file and
-     * index file. In case it is successfull in quering GitHub about the root
-     * path, it calls the callback with true, as argument. Otherwise, calls
-     * callback with false.
-     */
-    function getRootPath(callback) {
-        // URL that returns a list of objects, each representing a file/dir on
-        // the root path of the repo.
-        var ghUrl = ghBaseUrl + '/repos/' + user + '/' + repo + '/contents/';
-
-        $.get(ghUrl, function (data) {
-            // iterate on each file returned.
-            for (var i in data) {
-                var node = data[i],
+            $.get(ghUrl, function (data) {
+                var key,
+                    key2,
+                    key3,
+                    node,
+                    auxName,
                     extensionList = ['md', 'mdown', 'markdown'],
                     filenameList = ['index', 'readme', 'read'];
-                         
-                // check config file.
-                if ('.g2m2.json' === node.path && 'file' === node.type) {
-                    hasConfig = true;
-                }
 
-                // check index file.
-                if (null === indexFilePath) {
-                    for (var j in filenameList) {
-                        for (var k in extensionList) {
-                            var auxName = filenameList[j] + "." +
-                                extensionList[k];
-                            if (auxName === node.path.toLowerCase()) {
-                                indexFilePath = node.path;
+                // iterate on each file returned.
+                for (key in data) {
+                    node = data[key];
+
+                    // check config file.
+                    if ('.g2m2.json' === node.path && 'file' === node.type) {
+                        hasConfig = true;
+                    }
+
+                    // check index file.
+                    if (null === indexFilePath) {
+                        for (key2 in filenameList) {
+                            for (key3 in extensionList) {
+                                auxName = filenameList[key2] + "." +
+                                    extensionList[key3];
+                                if (auxName === node.path.toLowerCase()) {
+                                    indexFilePath = node.path;
+                                    break;
+                                }
+                            }
+                            if (null !== indexFilePath) {
                                 break;
                             }
                         }
-                        if (null !== indexFilePath) {
-                            break;
-                        }
                     }
                 }
+                callback(true);
 
-            }
-            callback(true);
-
-        }, 'json').fail(function (e) {
-            error(1, 'Failed requesting URL ' + ghUrl);
-            callback(false);
-        });
-    }
-
-    /**
-     * Call all hooks from registered plugins for a particular trigger.
-     *
-     * @param eventName Event identifier.
-     * @param arg Argument to be passed for the plugins.
-     * @returns returns the arg param that may have been altered by the plugins.
-     */
-    function callPlugins(eventName, arg) {
-        for (var i in $.g2m2Plugins) {
-            var plugin = $.g2m2Plugins[i];
-
-            if ('object' === typeof plugin && 'function' === typeof plugin[eventName]) {
-                console.log("callPlugins eventName: " + eventName + ", plugin: " + i);
-                arg = plugin[eventName](arg);
-            }
-        }
-
-        return arg;
-    }
-
-    function returnLoadConfig(config, callback) {
-        callback(config);
-    }
-
-    /**
-     * Load the repo g2m2 configuration.
-     *
-     * @param user GitHub's username.
-     * @param repo GitHub's repository name.
-     * @param callback Callback function to be invoked with the loaded config.
-     * @returns void
-     */
-    function loadConfig(user, repo, callback) {
-        var ghUrl = ghBaseUrl + '/repos/' + user + '/' + repo +
-            '/contents/.g2m2.json',
-            defaultConfig = {
-                'theme': 'bootstrap',
-                'css': [],
-                'js': [],
-                'plugins': []
-            };
-
-        $.g2m2Plugins = {};
-
-        if (hasConfig) {
-            $.get(ghUrl, function (data) {
-                returnLoadConfig(JSON.parse(atob(data.content.replace(/\s/g, ""))), callback);
             }, 'json').fail(function (e) {
-                console.error(
-                    'hasConfig is set to true but it failed getting the config file'
-                );
-                returnLoadConfig(defaultConfig, callback);
+                error(1, 'Failed requesting URL ' + ghUrl + '. ' + e);
+                callback(false);
             });
-        } else {
-            returnLoadConfig(defaultConfig, callback);
         }
-    }
 
-    /**
-     * Apply an specific theme.
-     *
-     * @param theme Theme name.
-     * @returns void
-     */
-    function applyTheme(config) {
-        console.log('applying theme: ' + config.theme);
+        /**
+         * Call all hooks from registered plugins for a particular trigger.
+         *
+         * @param eventName Event identifier.
+         * @param arg Argument to be passed for the plugins.
+         * @returns returns the arg param that may have been altered by the plugins.
+         */
+        function callPlugins(eventName, arg) {
+            var key,
+                plugin;
 
-        switch (config.theme) {
+            for (key in $.g2m2Plugins) {
+                plugin = $.g2m2Plugins[key];
+
+                if ('object' === typeof plugin &&
+                        'function' === typeof plugin[eventName]) {
+                    console.log(
+                        "callPlugins eventName: " + eventName + ", plugin: " +
+                            key
+                    );
+                    arg = plugin[eventName](arg);
+                }
+            }
+
+            return arg;
+        }
+
+        function returnLoadConfig(config, callback) {
+            callback(config);
+        }
+
+        /**
+         * Load the repo g2m2 configuration.
+         *
+         * @param user GitHub's username.
+         * @param repo GitHub's repository name.
+         * @param callback Callback function to be invoked with the loaded config.
+         * @returns void
+         */
+        function loadConfig(user, repo, callback) {
+            var ghUrl = ghBaseUrl + '/repos/' + user + '/' + repo +
+                '/contents/.g2m2.json',
+                defaultConfig = {
+                    'theme': 'bootstrap',
+                    'css': [],
+                    'js': [],
+                    'plugins': []
+                };
+
+            $.g2m2Plugins = {};
+
+            if (hasConfig) {
+                $.get(ghUrl, function (data) {
+                    returnLoadConfig(
+                        JSON.parse(atob(data.content.replace(/\s/g, ""))),
+                        callback
+                    );
+                }, 'json').fail(function (e) {
+                    console.error(
+                        'hasConfig is set to true but it failed getting the ' +
+                            'config file: ' + e
+                    );
+                    returnLoadConfig(defaultConfig, callback);
+                });
+            } else {
+                returnLoadConfig(defaultConfig, callback);
+            }
+        }
+
+        /**
+         * Add the list of CSS URL links to the current page, to be loaded by the
+         * browser.
+         */
+        function addCSSs(cssList) {
+            var key,
+                newCSS;
+
+            for (key in cssList) {
+                newCSS = document.createElement('link');
+                newCSS.href = cssList[key];
+                newCSS.media = 'screen';
+                newCSS.rel = 'stylesheet';
+                newCSS.type = 'text/css';
+
+                $('head').append(newCSS);
+            }
+        }
+
+        /**
+         * Apply an specific theme.
+         *
+         * @param theme Theme name.
+         * @returns void
+         */
+        function applyTheme(config) {
+            console.log('applying theme: ' + config.theme);
+
+            switch (config.theme) {
             case 'bootstrap':
                 addCSSs([
                     'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css'
                 ]);
                 config.plugins.push('plugins/BootstrapPlugin');
                 break;
+            }
+
+            return config;
         }
 
-        return config;
-    }
+        /**
+         * Add the list of JS URL links to the current page, to be loaded by the
+         * browser.
+         *
+         * @param jsList A list of js scripts to be loaded by the page,
+         * asynchronously.
+         */
+        function addJSs(jsList) {
+            var key,
+                newJS;
 
-    /**
-     * Add the list of CSS URL links to the current page, to be loaded by the
-     * browser.
-     */
-    function addCSSs(cssList) {
-        for (var i in cssList) {
-            var newCSS = document.createElement('link');
-            newCSS.href = cssList[i];
-            newCSS.media = 'screen';
-            newCSS.rel = 'stylesheet';
-            newCSS.type = 'text/css';
+            for (key in jsList) {
+                newJS = document.createElement('script');
+                newJS.src = jsList[key];
+                newJS.type = 'text/javascript';
 
-            $('head').append(newCSS);
+                $('html').append(newJS);
+            }
         }
-    }
 
-    /**
-     * Add the list of JS URL links to the current page, to be loaded by the
-     * browser.
-     *
-     * @param jsList A list of js scripts to be loaded by the page,
-     * asynchronously.
-     */
-    function addJSs(jsList) {
-        for (var i in jsList) {
-            var newJS = document.createElement('script');
-            newJS.src = jsList[i];
-            newJS.type = 'text/javascript';
+        /**
+         * Use RequireJS to load a list of scripts and, after all are properly
+         * loaded, run the callback function.
+         *
+         * @param jsList list of js scripts.
+         * @param callback Callback function to run.
+         * @returns void.
+         */
+        function requireAll(jsList, callback) {
+            // if there is more scripts to load
+            if ('object' === typeof jsList && jsList.length > 0) {
+                require([jsList[0]], function (data) {
+                    console.log('load: ' + jsList[0]);
+                    console.log(data);
 
-            $('html').append(newJS);
+                    $.g2m2Plugins[jsList[0]] = data;
+                    requireAll(jsList.slice(1), callback);
+                });
+            } else { // otherwise, run callback.
+                callback();
+            }
         }
-    }
 
-    /**
-     * Use RequireJS to load a list of scripts and, after all are properly
-     * loaded, run the callback function.
-     *
-     * @param jsList list of js scripts.
-     * @param callback Callback function to run.
-     * @returns void.
-     */
-    function requireAll(jsList, callback) {
-        // if there is more scripts to load
-        if ('object' === typeof jsList && jsList.length > 0) {
-            require([jsList[0]], function (data) {
-                console.log('load: ' + jsList[0]);
-                console.log(data);
-
-                $.g2m2Plugins[jsList[0]] = data;
-                requireAll(jsList.slice(1), callback);
-            });
-        } else { // otherwise, run callback.
-            callback();
+        /**
+         * Converts UTF-8 to Latin1
+         *
+         * @param str Text string in UTF-8 format.
+         * @returns string Latin1 encoded string.
+         */
+        function utf8ToLatin1(str) {
+            return decodeURIComponent(escape(str));
         }
-    }
 
-    /**
-     * Read and interpret the URL, to load the mardown file, convert to HTML
-     * and insert it to the current page.
-     */
-    g2m2.apply = function () {
-        // resolve GitHub user and repo.
-        var repoMap = new RepoMap();
-        repoMap.setLocation(window.location);
-        user = repoMap.getUser();
-        repo = repoMap.getRepo();
+        /**
+         * Read and interpret the URL, to load the mardown file, convert to HTML
+         * and insert it to the current page.
+         */
+        g2m2.apply = function () {
+            // resolve GitHub user and repo.
+            var repoMap = new RepoMap();
+            repoMap.setLocation(window.location);
+            user = repoMap.getUser();
+            repo = repoMap.getRepo();
 
-        // get root path.
-        getRootPath(function (ret) {
-            if (ret) {
-                // get config file.
-                loadConfig(user, repo, function (config) {
-                    console.log(config);
-                    if ('string' === typeof config.theme) {
-                        config = applyTheme(config);
-                    }
+            // get root path.
+            getRootPath(function (ret) {
+                if (ret) {
+                    // get config file.
+                    loadConfig(user, repo, function (config) {
+                        console.log(config);
+                        if ('string' === typeof config.theme) {
+                            config = applyTheme(config);
+                        }
 
-                    if ('object' === typeof config.css && config.css.length > 0) {
-                        addCSSs(config.css);
-                    }
+                        if ('object' === typeof config.css && config.css.length > 0) {
+                            addCSSs(config.css);
+                        }
 
-                    if ('object' === typeof config.js && config.js.length > 0) {
-                        addJSs(config.js);
-                    }
+                        if ('object' === typeof config.js && config.js.length > 0) {
+                            addJSs(config.js);
+                        }
 
-                    requireAll(config.plugins, function () {
-                        config = callPlugins("postLoadConfig", config);
+                        requireAll(config.plugins, function () {
+                            config = callPlugins("postLoadConfig", config);
 
-                        // if match ^/something$ or ^/something/$ then use
-                        // indexFilePath. Otherwise, remove the first string ^/something/.
-                        path = '/' === repoMap.getPath() ? indexFilePath : repoMap.getPath();
+                            // if match ^/something$ or ^/something/$ then use
+                            // indexFilePath. Otherwise, remove the first string ^/something/.
+                            path = '/' === repoMap.getPath() ? indexFilePath : repoMap.getPath();
 
-                        path = callPlugins("postPathCalc", path);
+                            path = callPlugins("postPathCalc", path);
 
-                        var ghUrlFile = ghBaseUrl + '/repos/' + user + '/' + repo +
-                                '/contents/' + (path.match(/\.md$/) ? path : path + '.md');
+                            var ghUrlFile = ghBaseUrl + '/repos/' + user + '/' + repo +
+                                    '/contents/' + (path.match(/\.md$/) ? path : path + '.md'),
+                                converter = new showdown.Converter(
+                                    {
+                                        tables: true,
+                                        strikethrough: true,
+                                        parseImgDimensions: true,
+                                        tasklists: true
+                                    }
+                                );
 
-                        ghUrlFile = callPlugins("postGhUrlFileCalc", ghUrlFile);
+                            ghUrlFile = callPlugins("postGhUrlFileCalc", ghUrlFile);
 
-                        var converter = new showdown.Converter(
-                            {
-                                tables: true,
-                                strikethrough: true,
-                                parseImgDimensions: true,
-                                tasklists: true
-                            }
-                        );
-                        // get file
-                        $.get(ghUrlFile, function (data) {
-                            var content = callPlugins(
-                                    "postContentCalc",
-                                    decodeURIComponent(escape(atob(data.content.replace(/\s/g, ""))))
-                                ),
-                                yaml = content.match(/[\s\S]*\/\*[\s\S]*[\s\S]*/) ? content.replace(/[\s\S]*\/\*/g, '').replace(/\*\/[\s\S]*/g, '') : '',
-                                yamlObj = callPlugins("postYamlObjCalc", jsYaml.safeLoad(yaml)),
-                                md = resolveImages(callPlugins("postMdCalc", content.replace(/\/\*[\s\S]*\*\//g, ''))),
-                                html = callPlugins("postHtmlCalc", converter.makeHtml(md));
+                            // get file
+                            $.get(ghUrlFile, function (data) {
+                                var content = callPlugins(
+                                        "postContentCalc",
+                                        utf8ToLatin1(atob(data.content.replace(/\s/g, "")))
+                                    ),
+                                    yaml = content.match(/[\s\S]*\/\*[\s\S]*[\s\S]*/) ? content.replace(/[\s\S]*\/\*/g, '').replace(/\*\/[\s\S]*/g, '') : '',
+                                    yamlObj = callPlugins("postYamlObjCalc", jsYaml.safeLoad(yaml)),
+                                    md = resolveImages(callPlugins("postMdCalc", content.replace(/\/\*[\s\S]*\*\//g, ''))),
+                                    html = callPlugins("postHtmlCalc", converter.makeHtml(md));
 
-                            $.md = md;
+                                console.log(content);
 
-                            if ('object' === typeof yamlObj && 'string' === typeof yamlObj.Title) {
-                                $('html head title').html(yamlObj.Title);
-                            }
+                                $.md = md;
 
-                            if ('object' === typeof yamlObj && 'string' === typeof yamlObj.Description) {
-                                $('html head meta[name="description"]').
-                                    attr('content', yamlObj.Description);
-                            }
+                                if ('object' === typeof yamlObj && 'string' === typeof yamlObj.Title) {
+                                    $('html head title').html(yamlObj.Title);
+                                }
 
-                            $('body').html(html);
-                            callPlugins('afterall', null);
-                        }, 'json').fail(function (e) {
-                            console.log('error 404');
-                            console.log(path);
-                            var ghUrlDir = ghBaseUrl + '/repos/' + user + '/' + repo +
-                                '/contents/' + path;
+                                if ('object' === typeof yamlObj && 'string' === typeof yamlObj.Description) {
+                                    $('html head meta[name="description"]').
+                                        attr('content', yamlObj.Description);
+                                }
 
-                            $.get(ghUrlDir, function (data) {
-                                var md = callPlugins("postMdCalc", listContent(data, path));
+                                $('body').html(html);
+                                callPlugins('afterall', null);
+                            }, 'json').fail(function (e) {
+                                console.log('error 404: ' + e);
+                                console.log(path);
+                                var ghUrlDir = ghBaseUrl + '/repos/' + user + '/' + repo +
+                                    '/contents/' + path;
 
-                                $('body').html(callPlugins("postHtmlCalc", converter.makeHtml(md)));
-                            }, 'json');
+                                $.get(ghUrlDir, function (data) {
+                                    var md = callPlugins("postMdCalc", listContent(data, path));
+
+                                    $('body').html(callPlugins("postHtmlCalc", converter.makeHtml(md)));
+                                }, 'json');
+                            });
                         });
                     });
-                });
-            }
-        });
-    };
+                }
+            });
+        };
 
-    return g2m2;
-});
+        return g2m2;
+    }
+);
