@@ -9,7 +9,8 @@ define(
         'RepoMap',
         'plugins/BootstrapPlugin',
         'plugins/GoogleAnalyticsPlugin',
-        'plugins/DisqusPlugin'
+        'plugins/DisqusPlugin',
+        'plugins/TocPlugin'
     ],
     function ($, showdown, jsYaml, RepoMap) {
         'use strict';
@@ -311,6 +312,7 @@ define(
                 if (ret) {
                     // get config file.
                     loadConfig(user, repo, function (config) {
+                        console.log("config: ");
                         console.log(config);
                         if ('string' === typeof config.theme) {
                             config = applyTheme(config);
@@ -363,7 +365,6 @@ define(
                                 } catch (err) {
                                     console.log("error loading yaml: " + yaml);
                                 }
-                                console.log(content);
 
                                 $.md = md;
 
@@ -377,7 +378,7 @@ define(
                                 }
 
                                 $('body').html(html);
-                                callPlugins('afterall', null);
+                                callPlugins('postHtmlApply', null);
                             }, 'json').fail(function (e) {
                                 console.log('error 404: ' + e);
                                 console.log(path);

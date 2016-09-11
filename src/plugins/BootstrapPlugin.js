@@ -8,7 +8,7 @@ define(['jquery'], function ($) {
         return '<div class="container">' + html + '</div>';
     };
 
-    BootstrapPlugin.prototype.afterall = function() {
+    BootstrapPlugin.prototype.postHtmlApply = function() {
         $('table').addClass('table table-striped');
     };
     

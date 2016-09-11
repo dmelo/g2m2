@@ -25,6 +25,7 @@
     "showdown": "^1.4.2",
     "js-yaml": "^3.6.1",
     "requirejs-plugins": "^1.0.3",
-    "showdown-table": "^1.0.1"
+    "showdown-table": "^1.0.1",
+    "toc": "^0.3.2"
   }
 }

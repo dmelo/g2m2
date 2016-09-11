@@ -5,7 +5,8 @@ requirejs.config({
         showdown: '../bower_components/showdown/dist/showdown',
         'js-yaml': '../bower_components/js-yaml/dist/js-yaml',
         json: '../bower_components/requirejs-plugins/src/json',
-        text: '../bower_components/requirejs-plugins/lib/text'
+        text: '../bower_components/requirejs-plugins/lib/text',
+        toc: '../bower_components/toc/dist/toc'
     }
 });
 
