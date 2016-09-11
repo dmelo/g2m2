@@ -1,5 +1,5 @@
 /*global define, atob, escape*/
-/*jslint regexp: true, browser: true*/
+/*jslint regexp: true, browser: true, plusplus: true*/
 
 define(
     [
@@ -44,7 +44,7 @@ define(
                         replace(/[^\/]*?$/, '') + ')\n';
             }
 
-            for (i in fileList) {
+            for (i = 0; i < fileList.length; i++) {
                 node = fileList[i];
                 text = '';
                 link = '';
@@ -100,7 +100,7 @@ define(
                     filenameList = ['index', 'readme', 'read'];
 
                 // iterate on each file returned.
-                for (key in data) {
+                for (key = 0; key < data.length; key++) {
                     node = data[key];
 
                     // check config file.
@@ -110,8 +110,8 @@ define(
 
                     // check index file.
                     if (null === indexFilePath) {
-                        for (key2 in filenameList) {
-                            for (key3 in extensionList) {
+                        for (key2 = 0; key2 < filenameList.length; key2++) {
+                            for (key3 = 0; key3 < extensionList.length; key3++) {
                                 auxName = filenameList[key2] + "." +
                                     extensionList[key3];
                                 if (auxName === node.path.toLowerCase()) {
@@ -210,7 +210,7 @@ define(
             var key,
                 newCSS;
 
-            for (key in cssList) {
+            for (key = 0; key < cssList.length; key++) {
                 newCSS = document.createElement('link');
                 newCSS.href = cssList[key];
                 newCSS.media = 'screen';
@@ -253,7 +253,7 @@ define(
             var key,
                 newJS;
 
-            for (key in jsList) {
+            for (key = 0; key < jsList.length; key++) {
                 newJS = document.createElement('script');
                 newJS.src = jsList[key];
                 newJS.type = 'text/javascript';
@@ -353,10 +353,16 @@ define(
                                         utf8ToLatin1(atob(data.content.replace(/\s/g, "")))
                                     ),
                                     yaml = content.match(/[\s\S]*\/\*[\s\S]*[\s\S]*/) ? content.replace(/[\s\S]*\/\*/g, '').replace(/\*\/[\s\S]*/g, '') : '',
-                                    yamlObj = callPlugins("postYamlObjCalc", jsYaml.safeLoad(yaml)),
+                                    yamlObj,
                                     md = resolveImages(callPlugins("postMdCalc", content.replace(/\/\*[\s\S]*\*\//g, ''))),
                                     html = callPlugins("postHtmlCalc", converter.makeHtml(md));
 
+
+                                try {
+                                    yamlObj = callPlugins("postYamlObjCalc", jsYaml.safeLoad(yaml));
+                                } catch (err) {
+                                    console.log("error loading yaml: " + yaml);
+                                }
                                 console.log(content);
 
                                 $.md = md;
