@@ -41,8 +41,7 @@ define(
 
             // Is it the root dir?
             if ('' !== path && '/' !== path) {
-                md += '- [Up](' + '/' + repo + '/' + path.replace(/\/$/, '').
-                        replace(/[^\/]*?$/, '') + ')\n';
+                md += '- [Up](' + (path.match(/\/$/) ? '..' : '.') + ')\n';
             }
 
             for (i = 0; i < fileList.length; i++) {
