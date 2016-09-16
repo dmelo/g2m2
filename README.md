@@ -28,6 +28,12 @@ Here is an example:
 The link above access my blog, which is on the
 [dmelo/g2m2-pages](https://github.com/dmelo/g2m2-pages) GitHub repo.
 
+Some highlights:
+
+- Completly open source
+- Free hosting
+- No setup required
+
 ## What G2M2 does?
 
 G2M2 takes the URL, map the corresponding MarkDown file on GitHub and present it
@@ -62,6 +68,31 @@ There is a set of developers, that like me, have the following characteristics:
 
 If you fit this description, then G2M2 is designed for you.
 
+## Features
+
+This section have the list of features embedded with G2M2.
+
+### Tables
+
+[Showdown](https://github.com/showdownjs/showdown) supports tables and G2M2
+enables that options:
+
+| Título                | Valor Aplic.  | Valor Atual |
+| --------------------- | ------------- | ----------- |
+| 2021 (LTF)            | R$ 226,95     | R$ 240,81   |
+| IPCA+ 2019 NTNB Princ | R$ 234,58     | R$ 248,85   |
+| Total                 | R$ 461,53     | R$ 489,81   |
+
+That table is generated from the code:
+
+```
+| Título                | Valor Aplic.  | Valor Atual |
+| --------------------- | ------------- | ----------- |
+| 2021 (LTF)            | R$ 226,95     | R$ 240,81   |
+| IPCA+ 2019 NTNB Princ | R$ 234,58     | R$ 248,85   |
+| Total                 | R$ 461,53     | R$ 489,81   |
+```
+
 ## Goals
 
 - write clean readable, well documented code;
@@ -78,16 +109,6 @@ posts, or the list of blog posts with a specific tag becames expensive when
 access each file means one HTTP GET request;
 - Not able to test changes locally - as G2M2 gets the content from GitHub, if
 you want to test your changes, you have to move it to GitHub.
-
-## Roadmap
-
-- make the md resolution server side
-    - cache the server side access to GitHub
-    - implement special GET parameter (e.g.: ?cache=false) to drop the cache
-    entry
-- implement favico lookup;
-- swappable markdown parser;
-
 
 ## License
 
