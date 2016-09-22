@@ -7,12 +7,14 @@ define(
         'showdown',
         'js-yaml',
         'RepoMap',
+        'highlight',
         'plugins/BootstrapPlugin',
         'plugins/GoogleAnalyticsPlugin',
         'plugins/DisqusPlugin',
-        'plugins/TocPlugin'
+        'plugins/TocPlugin',
+        'plugins/HighlightPlugin'
     ],
-    function ($, showdown, jsYaml, RepoMap) {
+    function ($, showdown, jsYaml, RepoMap, hljs) {
         'use strict';
 
         /**
@@ -180,7 +182,7 @@ define(
                     'theme': 'bootstrap',
                     'css': [],
                     'js': [],
-                    'plugins': []
+                    'plugins': ['HighlightPlugin']
                 };
 
             $.g2m2Plugins = {};
@@ -274,13 +276,17 @@ define(
         function requireAll(jsList, callback) {
             // if there is more scripts to load
             if ('object' === typeof jsList && jsList.length > 0) {
-                require([jsList[0]], function (data) {
-                    console.log('load: ' + jsList[0]);
-                    console.log(data);
+                try {
+                    require([jsList[0]], function (data) {
+                        console.log('load: ' + jsList[0]);
+                        console.log(data);
 
-                    $.g2m2Plugins[jsList[0]] = data;
-                    requireAll(jsList.slice(1), callback);
-                });
+                        $.g2m2Plugins[jsList[0]] = data;
+                        requireAll(jsList.slice(1), callback);
+                    });
+                } catch (err) {
+                    console.log("requireAll: error loading " + jsList[0]);
+                }
             } else { // otherwise, run callback.
                 callback();
             }
