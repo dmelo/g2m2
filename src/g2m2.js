@@ -182,7 +182,7 @@ define(
                     'theme': 'bootstrap',
                     'css': [],
                     'js': [],
-                    'plugins': ['HighlightPlugin']
+                    'plugins': ['plugins/HighlightPlugin']
                 };
 
             $.g2m2Plugins = {};
